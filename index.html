@@ -19,6 +19,10 @@
             font-family: 'IBM+Plex+Sans+Arabic', sans-serif;
         }
     </style>
+    <script>
+        // Shim pour éviter l'erreur "process is not defined" sur GitHub Pages
+        window.process = { env: { API_KEY: "" } };
+    </script>
 <script type="importmap">
 {
   "imports": {

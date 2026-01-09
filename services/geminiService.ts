@@ -5,6 +5,7 @@ import { Expense, Insight, Language, Category } from "../types";
 export const getSmartInsights = async (expenses: Expense[], lang: Language): Promise<Insight | null> => {
   if (expenses.length === 0) return null;
 
+  // Instanciation à la volée pour utiliser la clé active process.env.API_KEY
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
   const langNames: Record<Language, string> = {
@@ -48,6 +49,7 @@ export const getSmartInsights = async (expenses: Expense[], lang: Language): Pro
 };
 
 export const parseExpenseFromVoice = async (base64Audio: string, mimeType: string, lang: Language): Promise<Partial<Expense> | null> => {
+  // Instanciation à la volée pour utiliser la clé active process.env.API_KEY
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
   const systemPrompt = `You are an expense assistant. Extract expense details from the audio.
