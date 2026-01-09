@@ -1,0 +1,7 @@
+{
+  "name": "Regula Pro",
+  "description": "Une application moderne de gestion des dépenses quotidiennes avec analyses intelligentes propulsées par Gemini.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
