@@ -1,6 +1,6 @@
 
 import React, { useState, useRef } from 'react';
-import { PlusCircle, Calendar as CalendarIcon, Mic, MicOff, Loader2 } from 'lucide-react';
+import { PlusCircle, Calendar as CalendarIcon, Mic, MicOff, Loader2, Sparkles } from 'lucide-react';
 import { Expense, Category, Language } from '../types';
 import { CATEGORIES } from '../constants';
 import { translations } from '../translations';
@@ -22,6 +22,8 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ onAdd, lang }) => {
   const [isParsing, setIsParsing] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
+
+  const isAiAvailable = !!process.env.API_KEY && process.env.API_KEY.length > 0;
 
   const generateId = () => {
     if (typeof crypto !== 'undefined' && crypto.randomUUID) {
@@ -59,6 +61,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ onAdd, lang }) => {
   const isYesterday = date === yesterday.toISOString().split('T')[0];
 
   const startRecording = async () => {
+    if (!isAiAvailable) return;
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const recorder = new MediaRecorder(stream);
@@ -103,43 +106,53 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ onAdd, lang }) => {
   };
 
   return (
-    <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-      <div className="flex items-center justify-between mb-6">
+    <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 relative overflow-hidden">
+      {/* Decorative AI Glow */}
+      <div className={`absolute -top-10 -right-10 w-32 h-32 bg-indigo-50 rounded-full blur-3xl transition-opacity duration-500 ${isRecording || isParsing ? 'opacity-100' : 'opacity-0'}`} />
+
+      <div className="flex items-center justify-between mb-6 relative z-10">
         <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
           <PlusCircle className="text-blue-500" size={20} />
           {t.newExpense}
         </h2>
         
-        <button
-          type="button"
-          onClick={isRecording ? stopRecording : startRecording}
-          disabled={isParsing}
-          className={`p-3 rounded-full transition-all flex items-center justify-center ${
-            isRecording 
-              ? 'bg-red-500 text-white animate-pulse shadow-lg shadow-red-200' 
-              : isParsing
-              ? 'bg-slate-100 text-slate-400'
-              : 'bg-blue-50 text-blue-600 hover:bg-blue-100'
-          }`}
-          title="Saisie vocale"
-        >
-          {isParsing ? (
-            <Loader2 size={20} className="animate-spin" />
-          ) : isRecording ? (
-            <MicOff size={20} />
-          ) : (
-            <Mic size={20} />
-          )}
-        </button>
+        {isAiAvailable && (
+          <div className="relative">
+            <button
+              type="button"
+              onClick={isRecording ? stopRecording : startRecording}
+              disabled={isParsing}
+              className={`p-3.5 rounded-2xl transition-all flex items-center justify-center group relative ${
+                isRecording 
+                  ? 'bg-red-500 text-white animate-pulse shadow-xl shadow-red-200' 
+                  : isParsing
+                  ? 'bg-indigo-100 text-indigo-400'
+                  : 'bg-indigo-600 text-white shadow-lg shadow-indigo-100 hover:bg-indigo-700 hover:scale-110'
+              }`}
+              title={t.iaVoiceReady}
+            >
+              {isParsing ? (
+                <Loader2 size={20} className="animate-spin" />
+              ) : isRecording ? (
+                <MicOff size={20} />
+              ) : (
+                <div className="flex items-center gap-2">
+                   <Mic size={20} />
+                   <Sparkles size={12} className="absolute -top-1 -right-1 text-yellow-300 opacity-0 group-hover:opacity-100 transition-opacity" />
+                </div>
+              )}
+            </button>
+          </div>
+        )}
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-5">
+      <form onSubmit={handleSubmit} className="space-y-5 relative z-10">
         <div>
           <label className="block text-sm font-semibold text-slate-700 mb-1.5">{t.title}</label>
           <input
             type="text"
             required
-            className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-black"
+            className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-black transition-all"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
           />
@@ -152,7 +165,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ onAdd, lang }) => {
               type="number"
               step="0.01"
               required
-              className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-black"
+              className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-black transition-all"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
             />
@@ -160,7 +173,7 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ onAdd, lang }) => {
           <div>
             <label className="block text-sm font-semibold text-slate-700 mb-1.5">{t.category}</label>
             <select
-              className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none appearance-none text-black"
+              className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none appearance-none text-black transition-all"
               value={category}
               onChange={(e) => setCategory(e.target.value as Category)}
             >
@@ -208,20 +221,30 @@ const ExpenseForm: React.FC<ExpenseFormProps> = ({ onAdd, lang }) => {
           />
         </div>
 
-        <button type="submit" className="w-full py-3.5 bg-blue-600 text-white font-bold rounded-xl shadow-lg hover:bg-blue-700 transition-all">
+        <button type="submit" className="w-full py-4 bg-blue-600 text-white font-black rounded-xl shadow-lg shadow-blue-100 hover:bg-blue-700 transition-all active:scale-[0.98]">
           {t.save}
         </button>
       </form>
       
       {isRecording && (
-        <p className="text-[10px] text-red-500 font-bold mt-2 text-center animate-pulse">
-          ÉCOUTE EN COURS...
-        </p>
+        <div className="mt-4 flex items-center justify-center gap-2">
+          <div className="flex gap-1">
+            <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-bounce" />
+            <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-bounce [animation-delay:0.2s]" />
+            <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-bounce [animation-delay:0.4s]" />
+          </div>
+          <p className="text-[10px] text-red-500 font-black uppercase tracking-widest animate-pulse">
+            ÉCOUTE EN COURS...
+          </p>
+        </div>
       )}
       {isParsing && (
-        <p className="text-[10px] text-blue-500 font-bold mt-2 text-center">
-          ANALYSE INTELLIGENTE PAR GEMINI...
-        </p>
+        <div className="mt-4 flex items-center justify-center gap-2">
+          <Sparkles size={14} className="text-indigo-500 animate-spin" />
+          <p className="text-[10px] text-indigo-500 font-black uppercase tracking-widest">
+            {t.iaThinking}
+          </p>
+        </div>
       )}
     </div>
   );

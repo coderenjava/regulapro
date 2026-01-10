@@ -17,16 +17,13 @@ const App: React.FC = () => {
   const [lang, setLang] = useState<Language>(storageService.getLanguage());
   const [stock, setStock] = useState<GroceryItem[]>(storageService.getGroceryStock());
   const [activeTab, setActiveTab] = useState<'dashboard' | 'history' | 'budgets' | 'stock'>('dashboard');
-  const [isStoragePersisted, setIsStoragePersisted] = useState(false);
-
+  
   const t = translations[lang];
 
   useEffect(() => {
-    const initApp = async () => {
+    const initApp = () => {
       const savedExpenses = storageService.getExpenses();
       setExpenses(savedExpenses);
-      const persisted = await storageService.checkPersistence();
-      setIsStoragePersisted(persisted);
     };
     initApp();
   }, []);
@@ -115,13 +112,15 @@ const App: React.FC = () => {
       <header className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <div className="flex items-center gap-2">
-              <div className="bg-blue-600 p-1.5 rounded-lg shadow-md shadow-blue-100">
-                <Wallet2 className="text-white w-5 h-5" />
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <div className="bg-blue-600 p-1.5 rounded-lg shadow-md shadow-blue-100">
+                  <Wallet2 className="text-white w-5 h-5" />
+                </div>
+                <h1 className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 block">
+                  {t.appName}
+                </h1>
               </div>
-              <h1 className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 block">
-                {t.appName}
-              </h1>
             </div>
             
             <div className="flex items-center gap-4">
@@ -160,74 +159,70 @@ const App: React.FC = () => {
         </div>
       </header>
 
-      <main className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8 w-full">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8">
-          <div className="order-2 lg:order-1 lg:col-span-8 space-y-6 md:space-y-8">
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full flex-grow">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Left Column: Input and Insights */}
+          <div className="lg:col-span-1 space-y-8">
+            <ExpenseForm onAdd={handleAddExpense} lang={lang} />
+            <Insights expenses={expenses} lang={lang} />
+          </div>
+
+          {/* Right Column: Dynamic Content based on Active Tab */}
+          <div className="lg:col-span-2">
             {activeTab === 'dashboard' && (
-              <>
-                <Dashboard expenses={expenses} budgets={budgets} lang={lang} />
-                <div className="hidden md:block">
-                  <ExpenseList 
-                    expenses={expenses.slice(0, 5)} 
-                    onUpdate={handleUpdateExpense} 
-                    onToggleActivity={handleToggleExpenseActivity}
-                    lang={lang} 
-                  />
-                </div>
-              </>
-            )}
-            {activeTab === 'stock' && (
-              <GroceryTracker stock={stock} onToggle={toggleStock} onAdd={handleAddStockItem} lang={lang} />
+              <Dashboard expenses={expenses} budgets={budgets} lang={lang} />
             )}
             {activeTab === 'history' && (
               <ExpenseList 
                 expenses={expenses} 
                 onUpdate={handleUpdateExpense} 
-                onToggleActivity={handleToggleExpenseActivity}
+                onToggleActivity={handleToggleExpenseActivity} 
                 lang={lang} 
               />
             )}
             {activeTab === 'budgets' && (
-              <BudgetSettings budgets={budgets} onSave={handleSaveBudgets} onImportSuccess={handleImportSuccess} lang={lang} isPersisted={isStoragePersisted} />
+              <BudgetSettings 
+                budgets={budgets} 
+                onSave={handleSaveBudgets} 
+                onImportSuccess={handleImportSuccess} 
+                lang={lang} 
+              />
             )}
-          </div>
-
-          <div className="order-1 lg:order-2 lg:col-span-4 space-y-6 md:space-y-8">
-            <ExpenseForm onAdd={handleAddExpense} lang={lang} />
-            <Insights expenses={expenses} lang={lang} />
+            {activeTab === 'stock' && (
+              <GroceryTracker 
+                stock={stock} 
+                onToggle={toggleStock} 
+                onAdd={handleAddStockItem} 
+                lang={lang} 
+              />
+            )}
           </div>
         </div>
       </main>
 
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 px-4 pb-4">
-        <nav className="bg-white/90 backdrop-blur-lg border border-slate-200 shadow-2xl rounded-2xl flex justify-around p-2">
-          {navItems.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => setActiveTab(item.id as any)}
-              className={`flex flex-col items-center justify-center py-2 px-3 rounded-xl transition-all relative ${
-                activeTab === item.id ? 'text-blue-600' : 'text-slate-400'
-              }`}
-            >
-              <item.icon size={22} className={activeTab === item.id ? 'animate-pulse' : ''} />
-              <span className="text-[10px] mt-1 font-bold uppercase tracking-tighter">
-                {item.label}
-              </span>
-              {activeTab === item.id && (
-                <span className="absolute -top-1 w-8 h-1 bg-blue-600 rounded-full" />
-              )}
-            </button>
-          ))}
-        </nav>
-      </div>
-
-      <footer className="bg-white border-t border-slate-200 py-6 mt-8 md:mt-12 hidden md:block">
-        <div className="max-w-7xl mx-auto px-4 text-center">
-          <p className="text-slate-400 text-xs md:text-sm">
-            {t.footer}
-          </p>
+      {/* Footer */}
+      <footer className="bg-white border-t border-slate-200 py-6 mt-auto">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-slate-400 text-xs font-medium">
+          {t.footer}
         </div>
       </footer>
+
+      {/* Mobile Navigation */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 flex justify-around p-2 z-40 shadow-[0_-4px_10px_rgba(0,0,0,0.05)]">
+        {navItems.map((item) => (
+          <button
+            key={item.id}
+            onClick={() => setActiveTab(item.id as any)}
+            className={`flex flex-col items-center gap-1 px-3 py-1 rounded-xl transition-all ${
+              activeTab === item.id ? 'text-blue-600' : 'text-slate-400'
+            }`}
+          >
+            <item.icon size={20} />
+            <span className="text-[10px] font-bold">{item.label}</span>
+          </button>
+        ))}
+      </nav>
     </div>
   );
 };

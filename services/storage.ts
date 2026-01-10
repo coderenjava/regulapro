@@ -5,6 +5,7 @@ const STORAGE_KEY = 'smartspend_data';
 const BUDGET_KEY = 'smartspend_budgets';
 const LANG_KEY = 'smartspend_lang';
 const STOCK_KEY = 'smartspend_stock';
+const LAST_BACKUP_KEY = 'smartspend_last_backup';
 
 const DEFAULT_BUDGETS: CategoryBudget = {
   'Courses': 300,
@@ -61,12 +62,12 @@ export const storageService = {
     localStorage.setItem(STOCK_KEY, JSON.stringify(stock));
   },
 
-  checkPersistence: async (): Promise<boolean> => {
-    if (navigator.storage && navigator.storage.persist) {
-      const isPersisted = await navigator.storage.persist();
-      return isPersisted;
-    }
-    return false;
+  getLastBackupDate: (): string | null => {
+    return localStorage.getItem(LAST_BACKUP_KEY);
+  },
+
+  saveLastBackupDate: (date: string): void => {
+    localStorage.setItem(LAST_BACKUP_KEY, date);
   },
 
   exportAllData: (): string => {

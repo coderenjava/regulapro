@@ -14,8 +14,10 @@ const Insights: React.FC<InsightsProps> = ({ expenses, lang }) => {
   const t = translations[lang];
   const [insight, setInsight] = useState<Insight | null>(null);
   const [loading, setLoading] = useState(false);
+  const isAiAvailable = !!process.env.API_KEY && process.env.API_KEY.length > 0;
 
   const fetchInsights = async () => {
+    if (!isAiAvailable) return;
     const activeExpenses = expenses.filter(e => e.isActive !== false);
     if (activeExpenses.length < 3) return;
     setLoading(true);
@@ -26,12 +28,16 @@ const Insights: React.FC<InsightsProps> = ({ expenses, lang }) => {
 
   useEffect(() => {
     const activeExpenses = expenses.filter(e => e.isActive !== false);
-    if (activeExpenses.length >= 3 && !insight) {
+    if (isAiAvailable && activeExpenses.length >= 3 && !insight) {
       fetchInsights();
     }
-  }, [expenses]);
+  }, [expenses, isAiAvailable]);
 
   const activeExpensesCount = expenses.filter(e => e.isActive !== false).length;
+
+  if (!isAiAvailable) {
+    return null;
+  }
 
   if (activeExpensesCount < 3) {
     return (

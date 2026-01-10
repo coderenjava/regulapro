@@ -19,8 +19,6 @@ const ExpenseList: React.FC<ExpenseListProps> = ({ expenses, onUpdate, onToggleA
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<Category | 'all'>('all');
   const [currentPage, setCurrentPage] = useState(1);
-  
-  // Edit State
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
 
   const filteredExpenses = useMemo(() => {
@@ -68,7 +66,6 @@ const ExpenseList: React.FC<ExpenseListProps> = ({ expenses, onUpdate, onToggleA
 
   return (
     <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden flex flex-col relative">
-      {/* Edit Modal Overlay */}
       {editingExpense && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
           <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
@@ -134,7 +131,6 @@ const ExpenseList: React.FC<ExpenseListProps> = ({ expenses, onUpdate, onToggleA
                 />
               </div>
 
-              {/* Action Buttons: perfectly responsive, equal size and width */}
               <div className="flex flex-col sm:flex-row gap-3 pt-6">
                 <button
                   type="button"
@@ -155,7 +151,6 @@ const ExpenseList: React.FC<ExpenseListProps> = ({ expenses, onUpdate, onToggleA
         </div>
       )}
 
-      {/* Header & Filters */}
       <div className="p-5 md:p-8 border-b border-slate-100 bg-slate-50/30">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div className="flex items-center gap-3">
@@ -198,7 +193,6 @@ const ExpenseList: React.FC<ExpenseListProps> = ({ expenses, onUpdate, onToggleA
         </div>
       </div>
 
-      {/* Desktop View: Table */}
       <div className="hidden md:block overflow-x-auto">
         <table className="w-full text-start border-collapse">
           <thead>
@@ -213,6 +207,13 @@ const ExpenseList: React.FC<ExpenseListProps> = ({ expenses, onUpdate, onToggleA
           <tbody className="divide-y divide-slate-50">
             {currentItems.map((expense) => {
               const isDisabled = expense.isActive === false;
+              // Format de date local complet
+              const formattedDate = new Date(expense.date).toLocaleDateString(lang, { 
+                day: '2-digit', 
+                month: 'long', 
+                year: 'numeric' 
+              });
+              
               return (
                 <tr key={expense.id} className={`group hover:bg-blue-50/30 transition-colors ${isDisabled ? 'opacity-40 grayscale' : ''}`}>
                   <td className="px-8 py-5">
@@ -232,7 +233,7 @@ const ExpenseList: React.FC<ExpenseListProps> = ({ expenses, onUpdate, onToggleA
                   <td className="px-8 py-5">
                     <div className="flex items-center gap-2 text-slate-400 font-medium">
                       <Calendar size={14} />
-                      <span className="text-sm">{new Date(expense.date).toLocaleDateString(lang, { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                      <span className="text-sm">{formattedDate}</span>
                     </div>
                   </td>
                   <td className="px-8 py-5 text-end">
@@ -267,7 +268,6 @@ const ExpenseList: React.FC<ExpenseListProps> = ({ expenses, onUpdate, onToggleA
         </table>
       </div>
 
-      {/* Mobile View: Cards */}
       <div className="md:hidden divide-y divide-slate-100">
         {currentItems.map((expense) => {
           const isDisabled = expense.isActive === false;
@@ -316,7 +316,6 @@ const ExpenseList: React.FC<ExpenseListProps> = ({ expenses, onUpdate, onToggleA
         })}
       </div>
 
-      {/* Pagination Footer */}
       {filteredExpenses.length > 0 && (
         <div className="p-5 md:px-8 md:py-6 border-t border-slate-100 bg-white flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="text-sm text-slate-400 font-medium order-2 sm:order-1">
@@ -376,7 +375,6 @@ const ExpenseList: React.FC<ExpenseListProps> = ({ expenses, onUpdate, onToggleA
         </div>
       )}
 
-      {/* Empty State */}
       {filteredExpenses.length === 0 && (
         <div className="px-8 py-20 flex flex-col items-center justify-center text-center">
           <div className="bg-slate-50 p-6 rounded-full mb-4">

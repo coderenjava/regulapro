@@ -1,11 +1,12 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
-import { Expense, Insight, Language, Category } from "../types";
+import { Expense, Insight, Language } from "../types";
 
+// Using gemini-3-pro-preview for complex reasoning tasks like financial analysis
 export const getSmartInsights = async (expenses: Expense[], lang: Language): Promise<Insight | null> => {
   if (expenses.length === 0) return null;
 
-  // Instanciation à la volée pour utiliser la clé active process.env.API_KEY
+  // Always use process.env.API_KEY directly as per guidelines
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
   const langNames: Record<Language, string> = {
@@ -17,7 +18,7 @@ export const getSmartInsights = async (expenses: Expense[], lang: Language): Pro
 
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
+      model: 'gemini-3-pro-preview',
       contents: `Analyze these expenses and provide financial advice in ${langNames[lang]}: ${JSON.stringify(expenses)}`,
       config: {
         responseMimeType: "application/json",
@@ -32,12 +33,14 @@ export const getSmartInsights = async (expenses: Expense[], lang: Language): Pro
               description: "A list of 3 concrete actions to save money."
             }
           },
-          required: ["tip", "analysis", "recommendations"]
+          required: ["tip", "analysis", "recommendations"],
+          propertyOrdering: ["tip", "analysis", "recommendations"]
         },
         systemInstruction: `You are a benevolent personal finance expert. Analyze the provided JSON data and give strategic advice to optimize the user's budget. ALWAYS respond in ${langNames[lang]}.`
       }
     });
 
+    // Access .text property directly
     if (response.text) {
       return JSON.parse(response.text.trim());
     }
@@ -48,8 +51,8 @@ export const getSmartInsights = async (expenses: Expense[], lang: Language): Pro
   }
 };
 
+// Using gemini-3-flash-preview for fast audio data extraction
 export const parseExpenseFromVoice = async (base64Audio: string, mimeType: string, lang: Language): Promise<Partial<Expense> | null> => {
-  // Instanciation à la volée pour utiliser la clé active process.env.API_KEY
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
   const systemPrompt = `You are an expense assistant. Extract expense details from the audio.
@@ -63,17 +66,19 @@ export const parseExpenseFromVoice = async (base64Audio: string, mimeType: strin
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
-      contents: [
-        {
-          inlineData: {
-            data: base64Audio,
-            mimeType: mimeType
+      contents: {
+        parts: [
+          {
+            inlineData: {
+              data: base64Audio,
+              mimeType: mimeType
+            }
+          },
+          {
+            text: "Extract expense details from this audio recording."
           }
-        },
-        {
-          text: "Extract expense details from this audio recording."
-        }
-      ],
+        ]
+      },
       config: {
         systemInstruction: systemPrompt,
         responseMimeType: "application/json",
@@ -85,7 +90,8 @@ export const parseExpenseFromVoice = async (base64Audio: string, mimeType: strin
             category: { type: Type.STRING },
             date: { type: Type.STRING }
           },
-          required: ["title", "amount", "category", "date"]
+          required: ["title", "amount", "category", "date"],
+          propertyOrdering: ["title", "amount", "category", "date"]
         }
       }
     });
